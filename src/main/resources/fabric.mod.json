@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "arcmod",
+	"version": "${version}",
+	"name": "CtrMod",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"kuko"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "MIT",
+	"icon": "assets/arcmod/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.kuko.arcmod.ArcMod"
+		],
+		"fabric-datagen": [
+			"net.kuko.arcmod.ArcModDataGenerator"
+		]
+	},
+	"mixins": [
+		"arcmod.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.17.2",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*",
+		"some-mod": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
