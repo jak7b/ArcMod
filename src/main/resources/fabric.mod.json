@@ -2,7 +2,7 @@
 	"schemaVersion": 1,
 	"id": "arcmod",
 	"version": "${version}",
-	"name": "CtrMod",
+	"name": "Arc Mod",
 	"description": "This is an example description! Tell everyone what your mod is about!",
 	"authors": [
 		"kuko"
@@ -18,6 +18,9 @@
 		"main": [
 			"net.kuko.arcmod.ArcMod"
 		],
+		"client": [
+			"net.kuko.arcmod.ArcModClient"
+		],
 		"fabric-datagen": [
 			"net.kuko.arcmod.ArcModDataGenerator"
 		]
@@ -29,8 +32,7 @@
 		"fabricloader": ">=0.17.2",
 		"minecraft": "~1.20.1",
 		"java": ">=17",
-		"fabric-api": "*",
-		"some-mod": "*"
+		"fabric-api": "*"
 	},
 	"suggests": {
 		"another-mod": "*"
