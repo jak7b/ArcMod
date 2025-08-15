@@ -25,6 +25,7 @@ public class ArcMod implements ModInitializer {
 
 		ItemGroupEvents.modifyEntriesEvent(ItemGroups.BUILDING_BLOCKS).register(entries -> {
 			entries.add(ModBlockInit.EXAMPLE_BLOCK); // Replace with your item
+			entries.add(ModBlockInit.IRON_CONTROLLER_BLOCK);
 		});
 	}
 }

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "arcmod:block/iron_controller",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "arcmod:block/iron_controller"
+    },
+    "facing=south": {
+      "model": "arcmod:block/iron_controller",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "arcmod:block/iron_controller",
+      "y": 270
+    }
+  }
+}
