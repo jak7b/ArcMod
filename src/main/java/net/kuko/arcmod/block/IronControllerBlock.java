@@ -1,13 +1,16 @@
 package net.kuko.arcmod.block;
 
 import net.kuko.arcmod.block.entity.IronControllerBlockEntity;
+import net.kuko.arcmod.helper.patternUtils.InvalidPatternException;
+import net.kuko.arcmod.helper.patternUtils.PatternScanner;
 import net.kuko.arcmod.init.ModBlockInit;
-import net.kuko.arcmod.helper.patternUtils.BigIronPattern;
-import net.kuko.arcmod.helper.patternUtils.BigIronPatternEntry;
+import net.kuko.arcmod.helper.patternUtils.Patterns;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
@@ -56,19 +59,8 @@ public class IronControllerBlock extends BlockWithEntity {
         return state.get(INVISIBLE) ? BlockRenderType.INVISIBLE : BlockRenderType.MODEL;
     }
 
-    private BlockPos rotatePos(BlockPos relativePos, Direction facing) {
-        int x = relativePos.getX();
-        int y = relativePos.getY();
-        int z = relativePos.getZ();
 
-        return switch (facing) {
-            case NORTH -> new BlockPos(x, y, z);
-            case SOUTH -> new BlockPos(-x, y, -z);
-            case EAST -> new BlockPos(-z, y, x);
-            case WEST -> new BlockPos(z, y, -x);
-            default -> relativePos;
-        };
-    }
+
 
     @Override
     @SuppressWarnings({"java:S3776", "D"})
@@ -85,43 +77,44 @@ public class IronControllerBlock extends BlockWithEntity {
                     Direction facing = state.get(FACING);
                     boolean validStructure = true;
 
-                    for (BigIronPatternEntry entry : BigIronPattern.PATTERN) {
-                        BlockPos rotatedPos = rotatePos(entry.pos(), facing);
-                        BlockPos absolutePos = pos.add(rotatedPos);
-                        if (absolutePos.equals(pos)) continue;
+                    try {
+                        // Check against the IRON pattern, not the convenience method
+                        PatternScanner.scanPattern(world, pos, facing, Patterns.PATTERN_LIST,
+                                (absolutePos, actualState, entry) -> {
+                            if (!actualState.equals(entry.state())) {
+                                player.sendMessage(Text.literal("Invalid or missing block at: " + absolutePos)
+                                        .formatted(Formatting.RED), true);
+                                controllerEntity.setStructured(false);
+                                throw new InvalidPatternException();
+                            }
+                        }, true);
 
-                        BlockState actualState = world.getBlockState(absolutePos);
-                        if (!actualState.equals(entry.state())) {
-                            player.sendMessage(Text.literal("Invalid or missing block at: " + absolutePos)
-                                    .formatted(Formatting.RED), true);
-                            validStructure = false;
-                            break;
-                        }
-                    }
-
-                    controllerEntity.setStructured(validStructure);
-
-                    if (validStructure) {
-
+                        controllerEntity.setStructured(validStructure);
                         player.sendMessage(Text.literal("Structure is valid!").formatted(Formatting.GREEN), true);
 
                         BlockPos behindPos = pos.offset(facing.getOpposite());
 
-                        for (BigIronPatternEntry entry : BigIronPattern.PATTERN) {
-                            BlockPos rotatedPos = rotatePos(entry.pos(), facing);
-                            BlockPos absolutePos = pos.add(rotatedPos);
-                            if (absolutePos.equals(pos)) continue;
 
-                            world.setBlockState(absolutePos, ModBlockInit.PART_BLOCK.getDefaultState(), 3);
-                        }
+                        // Convert iron blocks to part blocks
+                        PatternScanner.scanPattern(world, pos, facing, Patterns.PATTERN_LIST, (absolutePos, actualState, entry) -> {
+                            // Skip AIR and controller blocks
+                            if (!entry.state().equals(Blocks.AIR.getDefaultState()) &&
+                                    !entry.state().equals(ModBlockInit.IRON_CONTROLLER_BLOCK.getDefaultState())) {
+                                world.setBlockState(absolutePos, ModBlockInit.PART_BLOCK.getDefaultState(), 3);
+                            }
+                        }, true);
 
-                        world.setBlockState(behindPos, Blocks.DIAMOND_BLOCK.getDefaultState());
+                    //    world.setBlockState(behindPos, Blocks.DIAMOND_BLOCK.getDefaultState());
 
                         // Make the controller itself invisible
                         world.setBlockState(pos, state.with(INVISIBLE, true), 3);
-                    }
 
-                    return ActionResult.SUCCESS;
+                        return ActionResult.SUCCESS;
+
+                    } catch (InvalidPatternException e) {
+                        // Structure validation failed, message already sent to player
+                        return ActionResult.FAIL;
+                    }
                 }
             } else {
                 // This is on Server AND if structured is true.
@@ -135,4 +128,52 @@ public class IronControllerBlock extends BlockWithEntity {
         return ActionResult.PASS;
     }
 
+    @Override
+    public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player)   {
+        if (!world.isClient) {
+            Direction facing = state.get(FACING);
+            BlockEntity entity = world.getBlockEntity(pos);
+
+            if (!(entity instanceof IronControllerBlockEntity controllerEntity)) {
+                super.onBreak(world, pos, state, player);
+                return;
+            }
+
+            // Only try to break the structure if it was actually structured
+            if (controllerEntity.isStructured()) {
+                try {
+                    // Verify the pattern is still valid (should be PART blocks now)
+                    PatternScanner.scanPattern(world, pos, facing, Patterns.PATTERN_LIST_PART,
+                            (absolutePos, actualState, entry) -> {
+                                if (!actualState.equals(entry.state())) {
+                                    player.sendMessage(Text.literal("Invalid or missing block at: " + absolutePos)
+                                            .formatted(Formatting.RED), true);
+                                    throw new InvalidPatternException();
+                                }
+                            }, true);
+
+                    // Remove all pattern blocks
+                    PatternScanner.scanPattern(world, pos, facing, Patterns.PATTERN_LIST_PART, (absolutePos, actualState, entry) -> {
+                        // Skip AIR blocks and controller block
+                        if (!entry.state().equals(Blocks.AIR.getDefaultState()) &&
+                                !entry.state().equals(ModBlockInit.IRON_CONTROLLER_BLOCK.getDefaultState())) {
+                            world.setBlockState(absolutePos, Blocks.AIR.getDefaultState(), 3);
+                        }
+                    }, true);
+
+                    // Drop items
+                    ItemStack iron_block = new ItemStack(Items.IRON_BLOCK, 25);
+                    ItemEntity ironBlockItem = new ItemEntity(world, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, iron_block);
+
+                    world.spawnEntity(ironBlockItem);
+
+                } catch (InvalidPatternException e) {
+                    // Pattern is invalid, just break the controller without dropping extra items
+                    player.sendMessage(Text.literal("Structure was invalid, only dropping controller block").formatted(Formatting.YELLOW), true);
+                }
+            }
+        }
+
+        super.onBreak(world, pos, state, player);
+    }
 }

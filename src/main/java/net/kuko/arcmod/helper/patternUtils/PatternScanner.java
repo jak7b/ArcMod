@@ -1,27 +1,37 @@
 package net.kuko.arcmod.helper.patternUtils;
 
 import net.kuko.arcmod.helper.interfaces.BlockPatternAction;
+import net.kuko.arcmod.helper.interfaces.PatternEntry;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
+import java.util.List;
+
 public class PatternScanner {
 
-    public static void scanPattern(World world, BlockPos origin, Direction facing, BlockPatternAction action, boolean ignoreItself) {
-        for (BigIronPatternEntry entry : BigIronPattern.PATTERN) {
-            BlockPos rotatedPos = rotatePos(entry.pos(), facing);  // you can make rotatePos static too
+    public static <T extends PatternEntry> void scanPattern(World world, BlockPos origin, Direction facing,
+                                                            List<T> pattern,
+                                                            BlockPatternAction<T> action, boolean ignoreItself) {
+        for (T entry : pattern) {
+            BlockPos rotatedPos = rotatePos(entry.pos(), facing);
             BlockPos absolutePos = origin.add(rotatedPos);
-            if (ignoreItself) {  if (absolutePos.equals(origin)) continue; }
-
+            if (ignoreItself && absolutePos.equals(origin)) continue;
 
             BlockState actualState = world.getBlockState(absolutePos);
             action.apply(absolutePos, actualState, entry);
         }
     }
 
+    // Convenience method for BigIronPatternEntry specifically
+    public static void scanPattern(World world, BlockPos origin, Direction facing,
+                                   BlockPatternAction<BigIronPatternEntry> action, boolean ignoreItself) {
+        scanPattern(world, origin, facing, Patterns.PATTERN_LIST, action, ignoreItself);
+    }
+
     // optional: static rotatePos helper
-    private static BlockPos rotatePos(BlockPos relativePos, Direction facing) {
+    public static BlockPos rotatePos(BlockPos relativePos, Direction facing) {
         int x = relativePos.getX();
         int y = relativePos.getY();
         int z = relativePos.getZ();

@@ -5,6 +5,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 
 @FunctionalInterface
-public interface BlockPatternAction {
-    void apply(BlockPos absolutePos, BlockState actualState, BigIronPatternEntry entry);
+public interface BlockPatternAction<T> {
+    void apply(BlockPos absolutePos, BlockState actualState, T entry);
 }
+

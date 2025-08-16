@@ -1,5 +1,6 @@
 package net.kuko.arcmod.init;
 
+import io.wispforest.owo.registration.annotations.AssignedName;
 import io.wispforest.owo.registration.reflect.AutoRegistryContainer;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.kuko.arcmod.block.PartBlock;
@@ -18,10 +19,12 @@ public class ModBlockEntityInit implements AutoRegistryContainer<BlockEntityType
             FabricBlockEntityTypeBuilder.create(ExampleBlockEntity::new,
                     ModBlockInit.EXAMPLE_BLOCK).build();
 
+    @AssignedName("big_iron_controller")
     public static final BlockEntityType<IronControllerBlockEntity> IRON_CONTROLLER_BE =
             FabricBlockEntityTypeBuilder.create(IronControllerBlockEntity::new,
                     ModBlockInit.IRON_CONTROLLER_BLOCK).build();
-//
+
+    @AssignedName("big_iron_part")
     public static final BlockEntityType<PartBlockEntity> PART_BE =
             FabricBlockEntityTypeBuilder.create(PartBlockEntity::new,
                     ModBlockInit.PART_BLOCK).build();

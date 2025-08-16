@@ -10,6 +10,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
+import net.minecraft.sound.BlockSoundGroup;
 
 public class ModBlockInit implements BlockRegistryContainer {
     public static final Block EXAMPLE_BLOCK = new ExampleBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
@@ -18,7 +19,10 @@ public class ModBlockInit implements BlockRegistryContainer {
     public static final Block IRON_CONTROLLER_BLOCK = new IronControllerBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
 
     @NoBlockItem
-    public static final Block PART_BLOCK = new PartBlock(AbstractBlock.Settings.create());
+    public static final Block PART_BLOCK = new PartBlock(AbstractBlock.Settings
+            .copy(Blocks.BEDROCK)
+            .sounds(BlockSoundGroup.METAL));
+
 
     @Override
     public BlockItem createBlockItem(Block block, String identifier) {
