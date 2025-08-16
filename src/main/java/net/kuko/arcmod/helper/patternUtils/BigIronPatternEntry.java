@@ -1,4 +1,4 @@
-package net.kuko.arcmod.patternEntries;
+package net.kuko.arcmod.helper.patternUtils;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;

@@ -1,4 +1,4 @@
-package net.kuko.arcmod.patternEntries;
+package net.kuko.arcmod.helper.patternUtils;
 
 import net.kuko.arcmod.init.ModBlockInit;
 import net.minecraft.block.Blocks;
